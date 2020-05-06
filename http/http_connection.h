@@ -272,11 +272,12 @@ class Connection : public std::enable_shared_from_this<
 #ifdef BMCWEB_ENABLE_MUTUAL_TLS_AUTHENTICATION
         auto ca_available = !std::filesystem::is_empty(
             std::filesystem::path(ensuressl::trustStorePath));
-        if (ca_available && crow::persistent_data::SessionStore::getInstance()
+        if (ca_available /*&& crow::persistent_data::SessionStore::getInstance()
                                 .getAuthMethodsConfig()
-                                .tls)
+                                .tls*/)
         {
-            adaptor.set_verify_mode(boost::asio::ssl::verify_peer);
+            adaptor.set_verify_mode(boost::asio::ssl::verify_peer |
+                boost::asio::ssl::verify_fail_if_no_peer_cert);
             SSL_set_session_id_context(
                 adaptor.native_handle(),
                 reinterpret_cast<const unsigned char*>(serverName.c_str()),
@@ -284,7 +285,7 @@ class Connection : public std::enable_shared_from_this<
             BMCWEB_LOG_DEBUG << this << " TLS is enabled on this connection.";
         }
 
-        adaptor.set_verify_callback([this](
+        /*adaptor.set_verify_callback([this](
                                         bool preverified,
                                         boost::asio::ssl::verify_context& ctx) {
             // do nothing if TLS is disabled
@@ -441,7 +442,7 @@ class Connection : public std::enable_shared_from_this<
                                  << " Generating TLS session: " << sp->uniqueId;
             }
             return true;
-        });
+        });*/
 #endif // BMCWEB_ENABLE_MUTUAL_TLS_AUTHENTICATION
 
 #ifdef BMCWEB_ENABLE_DEBUG
